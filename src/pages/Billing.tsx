@@ -9,10 +9,8 @@ import {
   IndianRupee, 
   Smartphone, 
   Printer,
-  X,
   History,
   Scan,
-  AlertCircle,
   ShoppingCart
 } from 'lucide-react';
 import { db, auth } from '../lib/firebase';
@@ -25,8 +23,7 @@ import {
   updateDoc, 
   doc, 
   increment,
-  limit,
-  orderBy
+  limit
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
@@ -122,23 +119,6 @@ const Billing = () => {
     }
     setSearchTerm('');
     setSearchResults([]);
-    setSubstitutes([]);
-  };
-
-  const [substitutes, setSubstitutes] = useState<any[]>([]);
-  const [loadingSubs, setLoadingSubs] = useState(false);
-
-  const getAISubstitutes = async (item: any) => {
-    setLoadingSubs(true);
-    try {
-      const { suggestSubstitutes } = await import('../services/aiService');
-      const subs = await suggestSubstitutes(item.medicineName, item.salt || '');
-      setSubstitutes(subs);
-    } catch (error) {
-      console.error('AI Subs error', error);
-    } finally {
-      setLoadingSubs(false);
-    }
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -308,46 +288,16 @@ const Billing = () => {
                       <p className="font-black text-text-primary text-sm tracking-tight">{result.medicineName?.toUpperCase() || 'PARACETAMOL 500MG'}</p>
                       <p className="text-[10px] font-bold text-text-secondary mt-1">BATCH: {result.batchNumber} | EXP: {result.expiryDate}</p>
                     </div>
-                    <div className="text-right flex items-center gap-4">
+                    <div className="text-right">
                       <div className="text-right">
                         <p className="font-black text-brand text-lg tracking-tighter">₹{result.saleRate}</p>
                         <p className={`text-[9px] font-black tracking-widest uppercase ${result.currentStock < 10 ? 'text-error-primary' : 'text-success-primary'}`}>
                           STOCK: {result.currentStock}
                         </p>
                       </div>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          getAISubstitutes(result);
-                        }}
-                        className="p-2.5 bg-brand/5 text-brand rounded-lg hover:bg-brand hover:text-white transition-all shadow-sm"
-                        title="Find Substitutes"
-                      >
-                        <AlertCircle size={16} />
-                      </button>
                     </div>
                   </div>
                 ))}
-
-                {loadingSubs && (
-                  <div className="p-4 text-center text-xs text-blue-600 animate-pulse font-bold">
-                    Gemini is thinking of substitutes...
-                  </div>
-                )}
-
-                {substitutes.length > 0 && (
-                  <div className="bg-blue-50 p-4 border-t border-blue-100">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase mb-2">Smart Suggestions (Same Salt)</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {substitutes.map((s, i) => (
-                        <div key={i} className="bg-white p-2 rounded-lg text-[11px] shadow-sm">
-                          <p className="font-bold text-gray-900">{s.name}</p>
-                          <p className="text-gray-500 lowercase">{s.manufacturer}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
