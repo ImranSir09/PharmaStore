@@ -423,7 +423,7 @@ const Billing = () => {
               { id: 'Cash', icon: <IndianRupee size={16} /> },
               { id: 'UPI', icon: <Smartphone size={16} /> },
               { id: 'Card', icon: <CreditCard size={16} /> },
-              { id: 'Credit', icon: <AlertCircle size={16} /> }
+              { id: 'Credit', icon: <History size={16} /> }
             ].map((mode) => (
               <button
                 key={mode.id}

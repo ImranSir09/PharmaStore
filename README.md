@@ -1,12 +1,10 @@
 # PharmaStore ERP - Production-Ready Pharmacy Management
 
-A high-performance, mobile-friendly, and offline-capable Pharmacy Management ERP designed specifically for Indian medical shops. Built with React 19, Firebase, and Gemini AI.
+A high-performance, mobile-friendly, and offline-capable Pharmacy Management ERP designed specifically for Indian medical shops. Built with React 19 and Firebase.
 
 ## 🚀 Key Features
 
 - **Billing & POS**: Lightning-fast billing with barcode support, GST calculation, and keyboard shortcuts (F2 for Search, F4 for Billing).
-- **Gemini AI Smart Search**: Integrated AI to suggest medicine substitutes based on salt composition and strength.
-- **OCR AI Purchase Entry**: Scan physical purchase bills using Gemini AI to automatically populate inventory and batch details.
 - **GST Module**: Automated CGST/SGST calculation and exportable reports for GSTR filing.
 - **Inventory & Expiry**: Batch-wise tracking with real-time low-stock and near-expiry alerts.
 - **PWA Ready**: Installable on Android/iOS/Desktop with offline data synchronization capabilities.
@@ -16,8 +14,7 @@ A high-performance, mobile-friendly, and offline-capable Pharmacy Management ERP
 
 - **Frontend**: React 19, Tailwind CSS 4, Motion
 - **Backend/DB**: Firebase Firestore & Authentication
-- **AI Engine**: Google Gemini 1.5 Flash
-- **Tools**: Vite, PWA Plugin, Recharts, jsPDF, Tesseract.js
+- **Tools**: Vite, PWA Plugin, Recharts, jsPDF
 
 ## 📦 Setup & Deployment
 

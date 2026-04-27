@@ -220,11 +220,11 @@ const Dashboard = () => {
           <div className="bg-text-primary p-8 rounded-xl shadow-2xl shadow-blue-900/20 text-white relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
             <div className="relative z-10">
-              <div className="bg-brand text-white text-[8px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded w-fit mb-4">New Feature</div>
-              <h4 className="text-lg font-black uppercase tracking-tighter mb-3 leading-tight">Gemini AI Search</h4>
-              <p className="text-xs text-white/60 font-medium mb-6 leading-relaxed">Find medical substitutes instantly by salt composition using Google's most advanced AI models.</p>
+              <div className="bg-brand text-white text-[8px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded w-fit mb-4">Enterprise</div>
+              <h4 className="text-lg font-black uppercase tracking-tighter mb-3 leading-tight">Data Security</h4>
+              <p className="text-xs text-white/60 font-medium mb-6 leading-relaxed">Your data is secured with AES-256 encryption and powered by Google Cloud's Enterprise infrastructure.</p>
               <button className="w-full py-4 bg-white text-text-primary hover:bg-brand hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl">
-                Explore Engine
+                Security Audit
               </button>
             </div>
           </div>
