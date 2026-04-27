@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "Medicine": {
+      "title": "Medicine",
+      "description": "Information about a medicine/drug",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Brand name of the medicine" },
+        "salt": { "type": "string", "description": "Chemical composition/salt" },
+        "strength": { "type": "string", "description": "e.g., 500mg, 5ml" },
+        "company": { "type": "string", "description": "Manufacturer name" },
+        "category": { "type": "string", "description": "e.g., Tablet, Syrup, Injection" },
+        "hsnCode": { "type": "string", "description": "GST HSN Code" },
+        "minStockLevel": { "type": "number", "description": "Alert level for low stock" },
+        "rackLocation": { "type": "string", "description": "Physical location in shop" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "company", "category"]
+    },
+    "Batch": {
+      "title": "Batch",
+      "description": "Specific batch of a medicine with expiry",
+      "type": "object",
+      "properties": {
+        "medicineId": { "type": "string" },
+        "batchNumber": { "type": "string" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "purchaseRate": { "type": "number" },
+        "saleRate": { "type": "number" },
+        "mrp": { "type": "number" },
+        "currentStock": { "type": "number" },
+        "gstPercentage": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["medicineId", "batchNumber", "expiryDate", "purchaseRate", "saleRate", "currentStock"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer details for billing and credit",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "gstin": { "type": "string" },
+        "outstandingBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Medicine distributors/suppliers",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "gstin": { "type": "string" },
+        "outstandingBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Sales invoice record",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "cgst": { "type": "number" },
+        "sgst": { "type": "number" },
+        "igst": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentMode": { "type": "string", "enum": ["Cash", "UPI", "Card", "Credit"] },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Pending", "Partially Paid"] },
+        "amountPaid": { "type": "number" },
+        "pharmacistId": { "type": "string" }
+      },
+      "required": ["invoiceNumber", "date", "totalAmount", "paymentMode"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "Purchase record from suppliers",
+      "type": "object",
+      "properties": {
+        "billNumber": { "type": "string" },
+        "supplierId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "gstAmount": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Pending"] },
+        "receivedBy": { "type": "string" }
+      },
+      "required": ["billNumber", "supplierId", "date", "totalAmount"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Accounting transactions for ledgers",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["Income", "Expense", "Payment Received", "Payment Made"] },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "paymentMode": { "type": "string" }
+      },
+      "required": ["date", "type", "amount"]
+    }
+  },
+  "firestore": {
+    "medicines": { "schema": "Medicine", "description": "Collection of all medicines available" },
+    "batches": { "schema": "Batch", "description": "Batches of medicines with stock levels" },
+    "customers": { "schema": "Customer", "description": "Customer list" },
+    "suppliers": { "schema": "Supplier", "description": "Supplier list" },
+    "sales": { "schema": "Sale", "description": "Invoices and sales records" },
+    "purchases": { "schema": "Purchase", "description": "Purchase records from suppliers" },
+    "transactions": { "schema": "Transaction", "description": "General ledger transactions" },
+    "users": { "schema": "object", "description": "User profiles and roles" }
+  }
+}

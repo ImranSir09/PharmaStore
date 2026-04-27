@@ -1,0 +1,6 @@
+{
+  "name": "PharmaStore ERP",
+  "description": "A comprehensive Pharmacy Management ERP for Indian medical shops, featuring fast billing, GST compliance, inventory tracking, and warehouse automation.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["Barcode Scanning", "OCR Bill Entry", "GST Invoicing", "Real-time Inventory"]
+}

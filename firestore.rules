@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isPharmacist() {
+      return isSignedIn() && (getUserData().role == 'pharmacist' || getUserData().role == 'admin');
+    }
+
+    // Medicines
+    match /medicines/{medicineId} {
+      allow read: if isSignedIn();
+      allow write: if isPharmacist();
+    }
+
+    // Batches
+    match /batches/{batchId} {
+      allow read: if isSignedIn();
+      allow write: if isPharmacist();
+    }
+
+    // Customers
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow write: if isPharmacist();
+    }
+
+    // Suppliers
+    match /suppliers/{supplierId} {
+      allow read: if isPharmacist();
+      allow write: if isPharmacist();
+    }
+
+    // Sales
+    match /sales/{saleId} {
+      allow read: if isSignedIn();
+      allow create: if isPharmacist();
+      allow update, delete: if isAdmin();
+    }
+
+    // Purchases
+    match /purchases/{purchaseId} {
+      allow read, write: if isPharmacist();
+    }
+
+    // Transactions
+    match /transactions/{transactionId} {
+      allow read, write: if isAdmin() || isPharmacist();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if request.auth.uid == userId || isAdmin();
+    }
+  }
+}
