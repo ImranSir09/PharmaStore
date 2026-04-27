@@ -30,7 +30,7 @@ import {
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface CartItem {
   id: string; // batchId
@@ -247,7 +247,7 @@ const Billing = () => {
       (item.saleRate * item.quantity).toFixed(2)
     ]);
     
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 60,
       head: [['Item', 'Batch', 'Exp.', 'Rate', 'Qty', 'GST', 'Total']],
       body: tableData,
@@ -279,40 +279,40 @@ const Billing = () => {
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
       {/* Left side: Billing Area */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col min-w-0">
-        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div className="flex-1 bg-white rounded-xl shadow-lg shadow-blue-900/5 border border-border-base flex flex-col min-w-0 overflow-hidden">
+        <div className="p-6 border-b border-border-base flex flex-col sm:flex-row gap-4 justify-between items-center bg-white">
           <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
             <input 
               ref={searchInputRef}
               type="text" 
-              placeholder="Search Medicine (F2)" 
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="SEARCH MEDICINE (F2)" 
+              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-border-base rounded-xl focus:border-brand focus:ring-0 outline-none font-black text-xs tracking-widest transition-all"
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
+                setSearchTerm(e.target.value.toUpperCase());
                 searchMedicines(e.target.value);
               }}
             />
             
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-xl shadow-2xl border-2 border-border-base z-50 overflow-hidden">
                 {searchResults.map((result) => (
-                  <button
+                  <div
                     key={result.id}
                     onClick={() => addToCart(result)}
-                    className="w-full px-4 py-3 text-left hover:bg-blue-50 flex justify-between items-center transition-colors border-b border-gray-50 last:border-none"
+                    className="w-full px-5 py-4 text-left hover:bg-brand/5 flex justify-between items-center transition-all border-b border-border-base last:border-none cursor-pointer"
                   >
                     <div>
-                      <p className="font-bold text-gray-900">{result.medicineName || 'Paracetamol 500mg'}</p>
-                      <p className="text-xs text-gray-500">Batch: {result.batchNumber} | Exp: {result.expiryDate}</p>
+                      <p className="font-black text-text-primary text-sm tracking-tight">{result.medicineName?.toUpperCase() || 'PARACETAMOL 500MG'}</p>
+                      <p className="text-[10px] font-bold text-text-secondary mt-1">BATCH: {result.batchNumber} | EXP: {result.expiryDate}</p>
                     </div>
-                    <div className="text-right flex items-center gap-3">
+                    <div className="text-right flex items-center gap-4">
                       <div className="text-right">
-                        <p className="font-bold text-blue-600">₹{result.saleRate}</p>
-                        <p className={`text-[10px] ${result.currentStock < 10 ? 'text-red-500' : 'text-green-500'}`}>
-                          Stock: {result.currentStock}
+                        <p className="font-black text-brand text-lg tracking-tighter">₹{result.saleRate}</p>
+                        <p className={`text-[9px] font-black tracking-widest uppercase ${result.currentStock < 10 ? 'text-error-primary' : 'text-success-primary'}`}>
+                          STOCK: {result.currentStock}
                         </p>
                       </div>
                       <button 
@@ -320,13 +320,13 @@ const Billing = () => {
                           e.stopPropagation();
                           getAISubstitutes(result);
                         }}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                        className="p-2.5 bg-brand/5 text-brand rounded-lg hover:bg-brand hover:text-white transition-all shadow-sm"
                         title="Find Substitutes"
                       >
                         <AlertCircle size={16} />
                       </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
 
                 {loadingSubs && (
@@ -352,16 +352,16 @@ const Billing = () => {
             )}
           </div>
 
-          <div className="flex gap-2">
-            <button className="p-2 text-gray-400 hover:text-blue-600 rounded-lg transition-colors">
-              <Scan size={24} />
+          <div className="flex gap-3">
+            <button className="p-3 text-text-secondary hover:text-brand bg-white border border-border-base rounded-xl transition-all shadow-sm">
+              <Scan size={20} />
             </button>
             <button 
               onClick={() => setShowHistory(!showHistory)}
-              className="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl flex items-center gap-2 text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="px-5 py-3 bg-white text-text-primary border border-border-base rounded-xl flex items-center gap-2 text-xs font-black tracking-widest hover:bg-brand/5 hover:text-brand transition-all shadow-sm"
             >
-              <History size={18} />
-              Recent
+              <History size={16} />
+              RECENT
             </button>
           </div>
         </div>
@@ -369,46 +369,46 @@ const Billing = () => {
         {/* Cart Table */}
         <div className="flex-1 overflow-auto p-6">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-              <ShoppingCart size={64} className="mb-4 opacity-20" />
-              <p className="text-lg font-medium">Cart is empty</p>
-              <p className="text-sm">Start searching medicines to add to bill</p>
+            <div className="h-full flex flex-col items-center justify-center text-text-secondary/40">
+              <ShoppingCart size={80} className="mb-6 opacity-20" />
+              <p className="text-xl font-black uppercase tracking-widest">Cart is empty</p>
+              <p className="text-[10px] uppercase font-bold mt-2 tracking-tighter">Search medicines to start generating bill</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm border-separate border-spacing-y-2">
               <thead>
-                <tr className="text-gray-500 border-b border-gray-100">
-                  <th className="text-left pb-4 font-medium">Medicine</th>
-                  <th className="text-center pb-4 font-medium">Rate</th>
-                  <th className="text-center pb-4 font-medium">Qty</th>
-                  <th className="text-right pb-4 font-medium">Total</th>
-                  <th className="w-10 pb-4"></th>
+                <tr className="text-text-secondary text-[10px] font-black tracking-widest uppercase">
+                  <th className="text-left px-4 pb-2">Medicine Details</th>
+                  <th className="text-center pb-2">Unit Rate</th>
+                  <th className="text-center pb-2">Quantity</th>
+                  <th className="text-right pb-2">Total amount</th>
+                  <th className="w-12 pb-2"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="">
                 {cart.map((item) => (
-                  <tr key={item.id}>
-                    <td className="py-4">
-                      <p className="font-bold text-gray-900">{item.name}</p>
-                      <p className="text-[10px] text-gray-500">Batch: {item.batchNumber} | Exp: {item.expiryDate}</p>
+                  <tr key={item.id} className="bg-white border border-border-base shadow-sm group">
+                    <td className="py-4 px-4 rounded-l-xl border-y border-l border-border-base group-hover:border-brand/30 transition-colors">
+                      <p className="font-black text-text-primary uppercase tracking-tight">{item.name}</p>
+                      <p className="text-[9px] font-bold text-text-secondary mt-1 tracking-widest">BATCH: {item.batchNumber} | EXP: {item.expiryDate}</p>
                     </td>
-                    <td className="py-4 text-center">₹{item.saleRate}</td>
-                    <td className="py-4">
-                      <div className="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-1 w-24 mx-auto">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:text-red-500 transition-colors">
-                          <Minus size={14} />
+                    <td className="py-4 text-center border-y border-border-base font-black text-text-primary group-hover:border-brand/30 transition-colors">₹{item.saleRate}</td>
+                    <td className="py-4 border-y border-border-base group-hover:border-brand/30 transition-colors">
+                      <div className="flex items-center justify-center gap-4 bg-surface-bg rounded-lg p-1.5 w-28 mx-auto border border-border-base shadow-inner">
+                        <button onClick={() => updateQuantity(item.id, -1)} className="p-1 px-2 hover:bg-white rounded hover:text-error-primary hover:shadow-sm transition-all">
+                          <Minus size={14} strokeWidth={3} />
                         </button>
-                        <span className="font-bold w-6 text-center">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:text-green-500 transition-colors">
-                          <Plus size={14} />
+                        <span className="font-black w-8 text-center text-xs">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, 1)} className="p-1 px-2 hover:bg-white rounded hover:text-success-primary hover:shadow-sm transition-all">
+                          <Plus size={14} strokeWidth={3} />
                         </button>
                       </div>
                     </td>
-                    <td className="py-4 text-right font-bold text-gray-900">
+                    <td className="py-4 text-right border-y border-border-base font-black text-text-primary text-base tracking-tighter group-hover:border-brand/30 transition-colors">
                       ₹{(item.saleRate * item.quantity).toFixed(2)}
                     </td>
-                    <td className="py-4 text-right">
-                      <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                    <td className="py-4 px-4 text-right rounded-r-xl border-y border-r border-border-base group-hover:border-brand/30 transition-colors">
+                      <button onClick={() => removeFromCart(item.id)} className="p-2 text-text-secondary/30 hover:text-error-primary hover:bg-error-primary/5 rounded-lg transition-all">
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -423,23 +423,23 @@ const Billing = () => {
       {/* Right side: Payment & Summary */}
       <div className="w-full lg:w-96 flex flex-col gap-6">
         {/* Customer Details */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <User className="text-blue-600" size={20} />
-            Customer Info
+        <div className="bg-white p-6 rounded-xl shadow-lg shadow-blue-900/5 border border-border-base">
+          <h3 className="text-xs font-black text-text-primary mb-6 flex items-center justify-between tracking-[0.2em] uppercase">
+            Customer Information
+            <User className="text-brand opacity-40" size={16} />
           </h3>
           <div className="space-y-4">
             <input 
               type="text" 
-              placeholder="Customer Name"
-              className="w-full px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="NAME / CASH SALE"
+              className="w-full px-4 py-3 bg-surface-bg border-2 border-transparent border-b-border-base rounded-lg focus:border-brand focus:ring-0 outline-none font-black text-[10px] tracking-widest placeholder:text-text-secondary/40 transition-all uppercase"
               value={customer.name}
-              onChange={(e) => setCustomer({...customer, name: e.target.value})}
+              onChange={(e) => setCustomer({...customer, name: e.target.value.toUpperCase()})}
             />
             <input 
               type="tel" 
-              placeholder="Mobile Number"
-              className="w-full px-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="PHONE NUMBER"
+              className="w-full px-4 py-3 bg-surface-bg border-2 border-transparent border-b-border-base rounded-lg focus:border-brand focus:ring-0 outline-none font-black text-[10px] tracking-widest placeholder:text-text-secondary/40 transition-all uppercase"
               value={customer.phone}
               onChange={(e) => setCustomer({...customer, phone: e.target.value})}
             />
@@ -447,38 +447,41 @@ const Billing = () => {
         </div>
 
         {/* Payment & Totals */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-1 flex flex-col">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Payment Summary</h3>
+        <div className="bg-white p-6 rounded-xl shadow-lg shadow-blue-900/5 border border-border-base flex-1 flex flex-col">
+          <h3 className="text-xs font-black text-text-primary mb-8 tracking-[0.2em] uppercase">Bill summary</h3>
           
-          <div className="space-y-4 mb-8">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
+          <div className="space-y-4 mb-10">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-secondary">
+              <span>Taxable amount</span>
+              <span className="text-text-primary">₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-gray-600">
-              <span>GST Total</span>
-              <span>₹{gst.toFixed(2)}</span>
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-secondary">
+              <span>GST (SGST+CGST)</span>
+              <span className="text-text-primary">₹{gst.toFixed(2)}</span>
             </div>
-            <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-              <span className="text-xl font-bold text-gray-900">Total Payable</span>
-              <span className="text-2xl font-black text-blue-600">₹{total.toFixed(2)}</span>
+            <div className="pt-6 border-t border-border-base flex justify-between items-end">
+              <div>
+                <p className="text-[9px] font-black text-text-secondary uppercase tracking-[0.2em] mb-1">Grant Total</p>
+                <p className="text-xs font-bold text-brand uppercase">Incl. all taxes</p>
+              </div>
+              <span className="text-4xl font-black text-text-primary tracking-tighter">₹{total.toFixed(2)}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-8">
+          <div className="grid grid-cols-2 gap-3 mb-10">
             {[
-              { id: 'Cash', icon: <IndianRupee size={18} /> },
-              { id: 'UPI', icon: <Smartphone size={18} /> },
-              { id: 'Card', icon: <CreditCard size={18} /> },
-              { id: 'Credit', icon: <AlertCircle size={18} /> }
+              { id: 'Cash', icon: <IndianRupee size={16} /> },
+              { id: 'UPI', icon: <Smartphone size={16} /> },
+              { id: 'Card', icon: <CreditCard size={16} /> },
+              { id: 'Credit', icon: <AlertCircle size={16} /> }
             ].map((mode) => (
               <button
                 key={mode.id}
                 onClick={() => setPaymentMode(mode.id)}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${
+                className={`flex items-center justify-center gap-3 p-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all ${
                   paymentMode === mode.id 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-brand text-white shadow-xl shadow-brand/30 border-2 border-brand scale-[1.02]' 
+                    : 'bg-white text-text-secondary hover:bg-surface-bg border-2 border-border-base'
                 }`}
               >
                 {mode.icon}
@@ -490,14 +493,14 @@ const Billing = () => {
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || isProcessing}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-all disabled:opacity-50 mt-auto shadow-xl shadow-blue-100"
+            className="w-full py-5 bg-brand hover:bg-brand-700 text-white rounded-xl font-black text-xs tracking-[0.2em] uppercase flex items-center justify-center gap-3 transition-all disabled:opacity-50 mt-auto shadow-2xl shadow-brand/30 group"
           >
             {isProcessing ? (
               <History className="animate-spin" />
             ) : (
               <>
-                <Printer size={20} />
-                <span>Print Invoice (F4)</span>
+                <Printer size={18} className="group-hover:scale-110 transition-transform" />
+                <span>Finalize & Print (F4)</span>
               </>
             )}
           </button>
