@@ -67,27 +67,53 @@ const Dashboard = () => {
   useEffect(() => {
     // Fetch real stats from Firestore
     const fetchStats = async () => {
-      // Prototype data for now, real queries would be more complex
-      const salesQuery = query(collection(db, 'sales'), limit(100));
-      const medicinesQuery = query(collection(db, 'medicines'));
-      const customersQuery = query(collection(db, 'customers'));
-      
-      const [salesSnap, medSnap, custSnap] = await Promise.all([
-        getDocs(salesQuery),
-        getDocs(medicinesQuery),
-        getDocs(customersQuery)
-      ]);
+      try {
+        const salesQuery = query(collection(db, 'sales'), limit(100));
+        const medicinesQuery = query(collection(db, 'medicines'));
+        const batchesQuery = query(collection(db, 'batches'), where('currentStock', '>', 0));
+        const customersQuery = query(collection(db, 'sales')); // Simple count of unique names for prototype
+        
+        const [salesSnap, medSnap, batchSnap] = await Promise.all([
+          getDocs(salesQuery),
+          getDocs(medicinesQuery),
+          getDocs(batchesQuery)
+        ]);
 
-      let totalSales = 0;
-      salesSnap.forEach(doc => totalSales += doc.data().totalAmount || 0);
+        let totalSales = 0;
+        salesSnap.forEach(doc => totalSales += doc.data().totalAmount || 0);
 
-      setStats({
-        sales: totalSales,
-        orders: salesSnap.size,
-        customers: custSnap.size,
-        lowStock: 12, // Dummy count for demo
-        nearExpiry: 5  // Dummy count for demo
-      });
+        // Calculate low stock and near expiry
+        let lowStockCount = 0;
+        let nearExpiryCount = 0;
+        const today = new Date();
+        const threeMonthsFromNow = new Date();
+        threeMonthsFromNow.setMonth(today.getMonth() + 3);
+
+        batchSnap.forEach(doc => {
+          const data = doc.data();
+          // Low stock check (if current stock < 10 for simplicity)
+          if (data.currentStock < 10) lowStockCount++;
+          
+          // Near expiry check
+          if (data.expiryDate) {
+            const exp = new Date(data.expiryDate);
+            if (exp <= threeMonthsFromNow) nearExpiryCount++;
+          }
+        });
+
+        const uniqueCustomers = new Set();
+        salesSnap.forEach(doc => uniqueCustomers.add(doc.data().customerName));
+
+        setStats({
+          sales: totalSales,
+          orders: salesSnap.size,
+          customers: uniqueCustomers.size,
+          lowStock: lowStockCount,
+          nearExpiry: nearExpiryCount
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard stats', error);
+      }
     };
 
     fetchStats();
@@ -201,7 +227,7 @@ const Dashboard = () => {
                   <AlertTriangle size={20} />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-text-primary uppercase tracking-tight">5 Units Expiring</p>
+                  <p className="text-xs font-black text-text-primary uppercase tracking-tight">{stats.nearExpiry} Units Expiring</p>
                   <p className="text-[10px] font-bold text-error-primary tracking-widest uppercase mt-1">Action Immediate</p>
                 </div>
               </div>
@@ -211,7 +237,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs font-black text-text-primary uppercase tracking-tight">Inventory Low</p>
-                  <p className="text-[10px] font-bold text-amber-900 tracking-widest uppercase mt-1">12 Items Below Min</p>
+                  <p className="text-[10px] font-bold text-amber-900 tracking-widest uppercase mt-1">{stats.lowStock} Items Below Min</p>
                 </div>
               </div>
             </div>

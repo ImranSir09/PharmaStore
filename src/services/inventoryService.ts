@@ -5,6 +5,7 @@ import {
   doc, 
   getDoc,
   getDocs,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -98,5 +99,24 @@ export const inventoryService = {
         });
       }
     });
+  },
+
+  async deleteMedicine(id: string) {
+    // Note: In a real system, you'd check for dependent batches first
+    await runTransaction(db, async (transaction) => {
+      const medRef = doc(db, 'medicines', id);
+      transaction.delete(medRef);
+      
+      // Also delete associated batches for consistency
+      const batchesQuery = query(collection(db, 'batches'), where('medicineId', '==', id));
+      const batchSnap = await getDocs(batchesQuery);
+      batchSnap.forEach(b => {
+        transaction.delete(doc(db, 'batches', b.id));
+      });
+    });
+  },
+
+  async deleteBatch(batchId: string) {
+    await deleteDoc(doc(db, 'batches', batchId));
   }
 };

@@ -81,7 +81,7 @@ const Billing = () => {
           item.id === medicine.id ? { ...item, quantity: item.quantity + 1 } : item
         ));
       } else {
-        alert('Cannot add more. Stock limit reached.');
+        alert(`Cannot add more. Only ${medicine.currentStock} units available.`);
       }
     } else {
       setCart([...cart, {
@@ -93,7 +93,8 @@ const Billing = () => {
         mrp: medicine.mrp,
         saleRate: medicine.saleRate,
         quantity: 1,
-        gstPercentage: medicine.gstPercentage || 12
+        gstPercentage: medicine.gstPercentage || 12,
+        maxStock: medicine.currentStock
       }]);
     }
     setSearchTerm('');
@@ -101,17 +102,14 @@ const Billing = () => {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    // We need to find the batch's current stock to validate
-    // Ideally searchResults or a specialized fetch would have this.
-    // Since we added from searchResults, we can assume the batch data is available 
-    // or we can fetch it. For now, let's assume we have it in a ref or if it's in cart.
-    
     setCart(prevCart => prevCart.map(item => {
       if (item.id === id) {
-        const newQty = Math.max(1, item.quantity + delta);
-        
-        // Find the original item in search results or similar to check stock
-        // For a more professional way, we'd store maxQty in the CartItem interface
+        const newQty = item.quantity + delta;
+        if (newQty < 1) return item;
+        if (newQty > item.maxStock) {
+          alert(`Only ${item.maxStock} units available in this batch.`);
+          return item;
+        }
         return { ...item, quantity: newQty };
       }
       return item;

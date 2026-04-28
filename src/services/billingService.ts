@@ -22,6 +22,7 @@ export interface CartItem {
   saleRate: number;
   quantity: number;
   gstPercentage: number;
+  maxStock: number; // For professional stock validation in UI
 }
 
 export interface SaleData {
