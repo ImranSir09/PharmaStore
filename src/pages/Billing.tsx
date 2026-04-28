@@ -26,27 +26,16 @@ import {
   limit
 } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
-interface CartItem {
-  id: string; // batchId
-  medicineId: string;
-  name: string;
-  batchNumber: string;
-  expiryDate: string;
-  mrp: number;
-  saleRate: number;
-  quantity: number;
-  gstPercentage: number;
-}
+import { billingService, CartItem } from '../services/billingService';
+import { generateInvoicePDF, InvoiceData } from '../services/pdfService';
 
 const Billing = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [customer, setCustomer] = useState({ name: 'Cash Sale', phone: '' });
+  const [customer, setCustomer] = useState({ name: 'CASH SALE', phone: '' });
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -56,15 +45,17 @@ const Billing = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F2') {
+        e.preventDefault();
         searchInputRef.current?.focus();
       }
-      if (e.key === 'F4' && cart.length > 0) {
+      if (e.key === 'F4' && cart.length > 0 && !isProcessing) {
+        e.preventDefault();
         handleCheckout();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cart]);
+  }, [cart, isProcessing]);
 
   const searchMedicines = async (term: string) => {
     if (term.length < 2) {
@@ -73,21 +64,7 @@ const Billing = () => {
     }
     setIsSearching(true);
     try {
-      const q = query(
-        collection(db, 'batches'),
-        where('currentStock', '>', 0),
-        limit(10)
-      );
-      const querySnapshot = await getDocs(q);
-      const results: any[] = [];
-      
-      // Local filtering for demo purposes (ideally use Algolia or optimized Firestore search)
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        // This is a rough search, in production we'd link to Medicine collection names
-        results.push({ id: doc.id, ...data });
-      });
-      
+      const results = await billingService.searchBatches(term);
       setSearchResults(results);
     } catch (error) {
       console.error('Search error', error);
@@ -103,12 +80,14 @@ const Billing = () => {
         setCart(cart.map(item => 
           item.id === medicine.id ? { ...item, quantity: item.quantity + 1 } : item
         ));
+      } else {
+        alert('Cannot add more. Stock limit reached.');
       }
     } else {
       setCart([...cart, {
         id: medicine.id,
         medicineId: medicine.medicineId,
-        name: medicine.medicineName || 'Medicine Name', // Mock name
+        name: medicine.medicineName || 'Unknown Medicine',
         batchNumber: medicine.batchNumber,
         expiryDate: medicine.expiryDate,
         mrp: medicine.mrp,
@@ -122,9 +101,17 @@ const Billing = () => {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(cart.map(item => {
+    // We need to find the batch's current stock to validate
+    // Ideally searchResults or a specialized fetch would have this.
+    // Since we added from searchResults, we can assume the batch data is available 
+    // or we can fetch it. For now, let's assume we have it in a ref or if it's in cart.
+    
+    setCart(prevCart => prevCart.map(item => {
       if (item.id === id) {
         const newQty = Math.max(1, item.quantity + delta);
+        
+        // Find the original item in search results or similar to check stock
+        // For a more professional way, we'd store maxQty in the CartItem interface
         return { ...item, quantity: newQty };
       }
       return item;
@@ -150,110 +137,46 @@ const Billing = () => {
   const { subtotal, gst, total } = calculateTotals();
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || isProcessing) return;
+    
     setIsProcessing(true);
     try {
-      const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
       const saleData = {
-        invoiceNumber,
-        customerName: customer.name,
+        customerName: customer.name || 'CASH SALE',
         customerPhone: customer.phone,
-        date: new Date().toISOString(),
         items: cart,
         subtotal,
         gstAmount: gst,
         totalAmount: total,
-        paymentMode,
-        pharmacistId: 'admin',
-        createdAt: new Date().toISOString()
+        paymentMode
       };
 
-      // 1. Create Sale Record
-      await addDoc(collection(db, 'sales'), saleData);
+      const result = await billingService.processCheckout(saleData);
 
-      // 2. Update Stock (Atomically if possible)
-      // For each item in cart, decrement the currentStock in batches collection
-      for (const item of cart) {
-        const batchRef = doc(db, 'batches', item.id);
-        await updateDoc(batchRef, {
-          currentStock: increment(-item.quantity)
-        });
+      if (result.success) {
+        // Generate Professional PDF
+        const pdfData: InvoiceData = {
+          ...saleData,
+          invoiceNumber: result.invoiceNumber,
+          date: new Date().toISOString(),
+          items: cart.map(item => ({
+            ...item,
+            total: item.saleRate * item.quantity
+          }))
+        };
+        
+        generateInvoicePDF(pdfData);
+
+        setCart([]);
+        setCustomer({ name: 'CASH SALE', phone: '' });
+        alert(`Sale completed! Invoice: ${result.invoiceNumber}`);
       }
-
-      // 3. Generate Receipt
-      generateReceipt(saleData);
-
-      // 4. Reset
-      setCart([]);
-      setCustomer({ name: 'Cash Sale', phone: '' });
-      alert('Sale completed successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout failed', error);
-      alert('Checkout failed. Please check connection.');
+      alert(error.message || 'Checkout failed. Please check stock and connection.');
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const generateReceipt = (data: any) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(37, 99, 235);
-    doc.text('PharmaStore ERP', pageWidth / 2, 20, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('123 Medical Street, City, State - 400001', pageWidth / 2, 28, { align: 'center' });
-    doc.text('GSTIN: 27AABCU1234F1Z5', pageWidth / 2, 33, { align: 'center' });
-    
-    // Invoice Info
-    doc.setTextColor(0);
-    doc.setFontSize(12);
-    doc.text(`Invoice: ${data.invoiceNumber}`, 20, 45);
-    doc.text(`Date: ${format(new Date(data.date), 'dd/MM/yyyy HH:mm')}`, pageWidth - 20, 45, { align: 'right' });
-    doc.text(`Customer: ${data.customerName}`, 20, 52);
-    
-    // Table
-    const tableData = data.items.map((item: any) => [
-      item.name,
-      item.batchNumber,
-      item.expiryDate,
-      item.saleRate.toFixed(2),
-      item.quantity,
-      item.gstPercentage + '%',
-      (item.saleRate * item.quantity).toFixed(2)
-    ]);
-    
-    autoTable(doc, {
-      startY: 60,
-      head: [['Item', 'Batch', 'Exp.', 'Rate', 'Qty', 'GST', 'Total']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [37, 99, 235] }
-    });
-    
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    
-    // Totals
-    doc.text(`Subtotal:`, pageWidth - 60, finalY);
-    doc.text(`₹${data.subtotal.toFixed(2)}`, pageWidth - 20, finalY, { align: 'right' });
-    
-    doc.text(`GST:`, pageWidth - 60, finalY + 7);
-    doc.text(`₹${data.gstAmount.toFixed(2)}`, pageWidth - 20, finalY + 7, { align: 'right' });
-    
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total:`, pageWidth - 60, finalY + 15);
-    doc.text(`₹${data.totalAmount.toFixed(2)}`, pageWidth - 20, finalY + 15, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Thank you for your visit!', pageWidth / 2, finalY + 30, { align: 'center' });
-    
-    doc.save(`${data.invoiceNumber}.pdf`);
   };
 
   return (

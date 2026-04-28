@@ -29,6 +29,8 @@ import {
 } from 'firebase/firestore';
 import { format, isBefore, addMonths } from 'date-fns';
 
+import { inventoryService, Medicine } from '../services/inventoryService';
+
 const Inventory = () => {
   const [medicines, setMedicines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,24 +38,13 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('All');
 
-  const [newMedicine, setNewMedicine] = useState({
+  const [newMedicine, setNewMedicine] = useState<Medicine>({
     name: '',
     salt: '',
     company: '',
     category: 'Tablet',
     minStockLevel: 10,
     hsnCode: ''
-  });
-
-  const [newBatch, setNewBatch] = useState({
-    batchNumber: '',
-    medicineId: '',
-    expiryDate: '',
-    purchaseRate: 0,
-    saleRate: 0,
-    mrp: 0,
-    currentStock: 0,
-    gstPercentage: 12
   });
 
   useEffect(() => {
@@ -63,7 +54,6 @@ const Inventory = () => {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      // Fetch medicines and their batches
       const medSnap = await getDocs(query(collection(db, 'medicines'), orderBy('name')));
       const meds: any[] = [];
       medSnap.forEach(doc => meds.push({ id: doc.id, ...doc.data(), batches: [] }));
@@ -88,15 +78,21 @@ const Inventory = () => {
   const handleAddMedicine = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const docRef = await addDoc(collection(db, 'medicines'), {
-        ...newMedicine,
-        createdAt: new Date().toISOString()
-      });
+      await inventoryService.addMedicine(newMedicine);
       setShowAddModal(false);
+      setNewMedicine({
+        name: '',
+        salt: '',
+        company: '',
+        category: 'Tablet',
+        minStockLevel: 10,
+        hsnCode: ''
+      });
       fetchInventory();
       alert('Medicine added successfully!');
     } catch (error) {
       console.error('Error adding medicine', error);
+      alert('Failed to add medicine');
     }
   };
 
