@@ -13,7 +13,7 @@ import {
   Scan,
   ShoppingCart
 } from 'lucide-react';
-import { db, auth } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { 
   collection, 
   query, 
@@ -164,7 +164,7 @@ const Billing = () => {
         gstAmount: gst,
         totalAmount: total,
         paymentMode,
-        pharmacistId: auth.currentUser?.uid,
+        pharmacistId: 'admin',
         createdAt: new Date().toISOString()
       };
 

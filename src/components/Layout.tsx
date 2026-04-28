@@ -8,14 +8,13 @@ import {
   Truck, 
   FileText, 
   Settings, 
-  LogOut,
   Bell,
   Menu,
   X,
   CreditCard,
   PieChart
 } from 'lucide-react';
-import { auth, logout } from '../lib/firebase';
+import { auth } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface SidebarItemProps {
@@ -107,13 +106,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </nav>
 
             <div className="p-4 border-t border-border-base">
-              <button 
-                onClick={() => logout()}
-                className="flex items-center gap-3 w-full px-4 py-3 text-text-secondary hover:bg-red-50 hover:text-error-primary rounded-lg transition-colors text-xs font-black tracking-widest"
-              >
-                <LogOut size={18} />
-                <span>LOGOUT</span>
-              </button>
+              <div className="px-4 py-3 text-[9px] font-black tracking-[0.2em] text-text-secondary/40 uppercase text-center">
+                PharmaStore System v1.0
+              </div>
             </div>
           </div>
         </aside>
@@ -144,11 +139,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
               <div className="flex items-center gap-3 pl-4 border-l border-border-base">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs font-black text-text-primary uppercase tracking-tighter">{auth.currentUser?.displayName || 'USER'}</p>
-                  <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest leading-none mt-1">{localStorage.getItem('userRole') || 'PHARMACIST'}</p>
+                  <p className="text-xs font-black text-text-primary uppercase tracking-tighter">PHARMACIST ADMIN</p>
+                  <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest leading-none mt-1">OWNER</p>
                 </div>
                 <img 
-                  src={auth.currentUser?.photoURL || `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'U'}`} 
+                  src={`https://ui-avatars.com/api/?name=Admin&background=0066FF&color=fff`} 
                   alt="Profile" 
                   className="w-8 h-8 rounded-lg border border-border-base shadow-sm"
                 />
